@@ -1,14 +1,14 @@
-import express, { Request, Response } from "express";
+import express from "express";
+import devRoutes from "./routes/dev";
+
+const port = process.env.PORT || 3000; 
 const app = express();
-const port = 3000;
 
 app.use(express.json());
+app.use("/dev", devRoutes);
 
-app.get("/", (request: Request, response: Response) => {
-  response.send('Hello World!');
+app.listen(port, () => {
+  console.log(
+    `Server is running on http://localhost:${port} veja o console para mais informações`
+  );
 });
-
-
-app.listen(port, ()=>{
-  console.log(`Server is running on http://localhost:${port}`);
-})
