@@ -1,44 +1,46 @@
+import pool from "./database";
 export interface Dev {
   id: number;
-  name: string;
-  age: number;
+  nome: string;
   linguagem: string;
 }
 
 class DatabaseDevelopment {
-  private devs: Dev[] = [
-    { id: 1, name: "Samuel", age: 25, linguagem: "JavaScript" },
-    { id: 2, name: "Maria", age: 30, linguagem: "Python" },
-    { id: 3, name: "João", age: 22, linguagem: "Java" },
-  ];
-
-  getAllDevs(): Dev[] {
-    return this.devs;
+  async getAll(): Promise<Dev[]> {
+    const result = await pool.query('SELECT * FROM devs');
+    return result.rows;
   }
 
-  getById(id: number): Dev | undefined {
-    return this.devs.find((dev) => dev.id === id);
+  async getById(id: number): Promise<Dev | null> {
+    const result = await pool.query('SELECT * FROM devs WHERE id = $1', [id]);
+    return result.rows[0] || null;
   }
 
-  add(dev: Dev): void {
-    this.devs.push(dev);
+  async add(dev: Omit<Dev, 'id'>): Promise<Dev> {
+    const result = await pool.query(
+      'INSERT INTO devs (nome, linguagem) VALUES ($1, $2) RETURNING *',
+      [dev.nome, dev.linguagem]
+    );
+    return result.rows[0];
   }
 
-  update(id: number, data: Partial<Dev>): Dev | null {
-    const index = this.devs.findIndex((dev) => dev.id == id);
-    if (index !== -1) {
-      this.devs[index] = { ...this.devs[index], ...data };
-      return this.devs[index];
-    }
-    return null;
+  async update(id: number, data: Partial<Omit<Dev, 'id'>>): Promise<Dev | null> {
+    const devAtual = await this.getById(id);
+    if (!devAtual) return null;
+
+    const nome = data.nome || devAtual.nome;
+    const linguagem = data.linguagem || devAtual.linguagem;
+
+    const result = await pool.query(
+      'UPDATE devs SET nome = $1, linguagem = $2 WHERE id = $3 RETURNING *',
+      [nome, linguagem, id]
+    );
+    return result.rows[0];
   }
 
-  delete(id: number): Dev | null {
-    const index = this.devs.findIndex((dev) => dev.id == id);
-    if (index !== -1) {
-      return this.devs.splice(index, 1)[0];
-    }
-    return null;
+  async delete(id: number): Promise<Dev | null> {
+    const result = await pool.query('DELETE FROM devs WHERE id = $1 RETURNING *', [id]);
+    return result.rows[0] || null;
   }
 }
 
