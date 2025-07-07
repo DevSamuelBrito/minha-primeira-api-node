@@ -1,9 +1,5 @@
-import pool from "./database";
-export interface Dev {
-  id: number;
-  nome: string;
-  linguagem: string;
-}
+import pool from "../db/database";
+import Dev  from "../models/devModel";
 
 class DatabaseDevelopment {
   async getAll(): Promise<Dev[]> {
@@ -28,8 +24,8 @@ class DatabaseDevelopment {
     const devAtual = await this.getById(id);
     if (!devAtual) return null;
 
-    const nome = data.nome || devAtual.nome;
-    const linguagem = data.linguagem || devAtual.linguagem;
+    const nome = data.nome ?? devAtual.nome;
+    const linguagem = data.linguagem ?? devAtual.linguagem;
 
     const result = await pool.query(
       'UPDATE devs SET nome = $1, linguagem = $2 WHERE id = $3 RETURNING *',
