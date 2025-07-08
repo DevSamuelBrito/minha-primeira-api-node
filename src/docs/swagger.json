@@ -1,0 +1,112 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Dev API",
+    "version": "1.0.0",
+    "description": "Documentação da API de desenvolvedores"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "API de Devs"
+    }
+  ],
+  "paths": {
+    "/dev": {
+      "get": {
+        "summary": "Lista todos os devs",
+        "responses": {
+          "200": {
+            "description": "Lista de devs"
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria um novo dev",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": { "type": "string" },
+                  "linguagem": { "type": "string" }
+                },
+                "required": ["nome", "linguagem"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Dev criado"
+          }
+        }
+      }
+    },
+    "/dev/{id}": {
+      "get": {
+        "summary": "Busca um dev por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dev encontrado"
+          },
+          "404": {
+            "description": "Dev não encontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualiza um dev",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": { "type": "string" },
+                  "linguagem": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Dev atualizado" }
+        }
+      },
+      "delete": {
+        "summary": "Remove um dev por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Dev removido" }
+        }
+      }
+    }
+  }
+}
