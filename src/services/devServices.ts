@@ -25,7 +25,6 @@ class DevService {
 
     const nome = data.nome ?? devAtual.nome;
     const linguagem = data.linguagem ?? devAtual.linguagem;
-    console.log("Atualizando dev:", { id, nome, linguagem });
     
     return devRepository.update(id, { nome, linguagem });
   }
