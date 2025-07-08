@@ -14,7 +14,17 @@ app.use("/dev", devRoutes);
 if (process.env.NODE_ENV === "development") {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
-app.listen(port, () => {
-  console.log("Servidor está rodando....");
-  console.log(`Server rodando em http://localhost:${port}`);
-});
+
+const start = async () => {
+  try {
+    await app.listen(port, () => {
+      console.log("Servidor está rodando....");
+      console.log(`Server rodando em http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error("Erro ao iniciar o servidor:", error);
+    process.exit(1);
+  }
+};
+
+start();
