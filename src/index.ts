@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use("/dev", devRoutes);
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 
