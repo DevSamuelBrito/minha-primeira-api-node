@@ -12,7 +12,7 @@ class DevService {
 
   async add(dev: Omit<Dev, "id">): Promise<Dev> {
     if (!dev.nome) throw new Error("Nome é obrigatório");
-    if (!dev.linguagem) throw new Error("Nome é obrigatório");
+    if (!dev.linguagem) throw new Error("Linguagem é obrigatório");
     return devRepository.add(dev);
   }
 
