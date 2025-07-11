@@ -1,0 +1,21 @@
+# Dockerfile.dev
+FROM node:18
+
+# Diretório de trabalho
+WORKDIR /app
+
+# Instala dependências
+COPY package*.json ./
+RUN npm install
+
+# Copia o restante dos arquivos
+COPY . .
+
+# Instala o ts-node-dev para reiniciar a cada alteração
+RUN npm install -D ts-node-dev
+
+# Expõe a porta da aplicação
+EXPOSE 3000
+
+# Comando de desenvolvimento
+CMD ["npx", "ts-node-dev", "--respawn", "--transpile-only", "src/index.ts"]
