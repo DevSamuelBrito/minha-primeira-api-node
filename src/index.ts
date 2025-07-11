@@ -7,7 +7,7 @@ import swaggerUi from "swagger-ui-express";
 dotenv.config();
 
 export const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
 app.use("/dev", devRoutes);
@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
 
 const start = async () => {
   try {
-    await app.listen(port, () => {
+    await app.listen(port, "0.0.0.0", () => {
       console.log("Servidor está rodando....");
       console.log(`Server rodando em http://localhost:${port}`);
     });
