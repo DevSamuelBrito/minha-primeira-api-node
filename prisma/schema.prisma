@@ -14,30 +14,30 @@ datasource db {
 }
 
 model Dev {
-  id        String        @id @default(cuid())
-  name      String
-  email     String        @unique
-  techs     String[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String       @unique
+  techs       String[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   devProjects DevProject[]
 }
 
 model Project {
-  id        String        @id @default(cuid())
-  name      String
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
   description String
-  url       String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  url         String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   devProjects DevProject[]
 }
 
 model DevProject {
-  id        String   @id @default(cuid())
-  devId     String
-  projectId String
-
-  dev       Dev      @relation(fields: [devId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  devId     String @db.ObjectId
+  projectId String @db.ObjectId
+  
+  dev     Dev     @relation(fields: [devId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 }
