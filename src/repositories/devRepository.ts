@@ -1,42 +1,222 @@
-import pool from "../db/database";
-import Dev  from "../models/devModel";
+import { prisma } from "../lib/prisma";
+import { Dev, Project, DevProject } from "@prisma/client";
+import {
+  CreateDevInput,
+  CreateProjectInput,
+  UpdateDevInput,
+  UpdateProjectInput,
+} from "../models/devModel";
 
 class DatabaseDevelopment {
-  async getAll(): Promise<Dev[]> {
-    const result = await pool.query('SELECT * FROM devs');
-    return result.rows;
+  //GET
+  async getAllDevs(): Promise<Dev[]> {
+    return await prisma.dev.findMany();
   }
 
-  async getById(id: number): Promise<Dev | null> {
-    const result = await pool.query('SELECT * FROM devs WHERE id = $1', [id]);
-    return result.rows[0] || null;
+  async getDevById(id: string): Promise<Dev | null> {
+    return await prisma.dev.findUnique({
+      where: { id: id },
+      include: {
+        devProjects: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    });
   }
 
-  async add(dev: Omit<Dev, 'id'>): Promise<Dev> {
-    const result = await pool.query(
-      'INSERT INTO devs (nome, linguagem) VALUES ($1, $2) RETURNING *',
-      [dev.nome, dev.linguagem]
+  async getAllProjects(): Promise<Project[]> {
+    return await prisma.project.findMany();
+  }
+
+  async getProjectById(id: string): Promise<Project | null> {
+    return await prisma.project.findUnique({
+      where: { id: id },
+      include: {
+        devProjects: {
+          include: {
+            dev: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getDevProjectsByDevId(devId: string): Promise<DevProject[]> {
+    return await prisma.devProject.findMany({
+      where: { devId: devId },
+      include: {
+        project: true,
+      },
+    });
+  }
+
+  //POST
+  async createDev(data: CreateDevInput): Promise<CreateDevInput> {
+    return await prisma.dev.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        techs: data.techs,
+        devProjects: {
+          create:
+            data.devProjects?.map((project) => ({
+              project: {
+                connect: { id: project.projectId },
+              },
+            })) ?? [],
+        },
+      },
+      include: {
+        devProjects: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    });
+  }
+
+  async createProject(data: CreateProjectInput): Promise<Project> {
+    return await prisma.project.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        url: data.url,
+        devProjects: {
+          create: data.devProjects.map((dev) => ({
+            dev: {
+              connect: {
+                id: dev.devId,
+              },
+            },
+          })),
+        },
+      },
+      include: {
+        devProjects: {
+          include: {
+            dev: true,
+          },
+        },
+      },
+    });
+  }
+
+  //PUT
+  async updateDev(data: Partial<UpdateDevInput> & { id: string }) {
+    const existingLinks = await prisma.devProject.findMany({
+      where: { devId: data.id },
+      select: { projectId: true },
+    });
+
+    const existingProjectIds = new Set(
+      existingLinks.map((link) => link.projectId)
     );
-    return result.rows[0];
-  }
 
-  async update(id: number, data: Partial<Omit<Dev, 'id'>>): Promise<Dev | null> {
-    const devAtual = await this.getById(id);
-    if (!devAtual) return null;
-
-    const nome = data.nome ?? devAtual.nome;
-    const linguagem = data.linguagem ?? devAtual.linguagem;
-
-    const result = await pool.query(
-      'UPDATE devs SET nome = $1, linguagem = $2 WHERE id = $3 RETURNING *',
-      [nome, linguagem, id]
+    const newProjectsToLink = data.devProjects?.filter(
+      (project) => !existingProjectIds.has(project.projectId)
     );
-    return result.rows[0];
+
+    return await prisma.dev.update({
+      where: { id: data.id },
+      data: {
+        name: data.name,
+        email: data.email,
+        techs: data.techs,
+        updatedAt: new Date(),
+        devProjects:
+          newProjectsToLink && newProjectsToLink.length > 0
+            ? {
+                create: newProjectsToLink.map((project) => ({
+                  project: {
+                    connect: { id: project.projectId },
+                  },
+                })),
+              }
+            : undefined,
+      },
+      include: {
+        devProjects: {
+          include: { project: true },
+        },
+      },
+    });
   }
 
-  async delete(id: number): Promise<Dev | null> {
-    const result = await pool.query('DELETE FROM devs WHERE id = $1 RETURNING *', [id]);
-    return result.rows[0] || null;
+  async updateProject(data: Partial<UpdateProjectInput> & { id: string }) {
+    const existingLinks = await prisma.devProject.findMany({
+      where: { projectId: data.id },
+      select: { devId: true },
+    });
+
+    const existingDevIds = new Set(existingLinks.map((link) => link.devId));
+
+    const newDevsToLink = data.devProjects?.filter(
+      (dev) => !existingDevIds.has(dev.devId)
+    );
+
+    return await prisma.project.update({
+      where: { id: data.id },
+      data: {
+        name: data.name,
+        description: data.description,
+        url: data.url,
+        updatedAt: new Date(),
+        devProjects:
+          newDevsToLink && newDevsToLink.length > 0
+            ? {
+                create: newDevsToLink.map((dev) => ({
+                  dev: {
+                    connect: { id: dev.devId },
+                  },
+                })),
+              }
+            : undefined,
+      },
+      include: {
+        devProjects: {
+          include: { dev: true },
+        },
+      },
+    });
+  }
+
+  //DELETE
+  async deleteDev(id: string): Promise<Dev | null> {
+    const devProjects = await prisma.devProject.findMany({
+      where: { devId: id },
+      include: { project: true },
+    });
+    for (const devProject of devProjects) {
+      const count = await prisma.devProject.count({
+        where: { projectId: devProject.projectId },
+      });
+
+      if (count === 1) {
+        await prisma.project.delete({
+          where: { id: devProject.projectId },
+        });
+      } else {
+        await prisma.devProject.delete({
+          where: { id: devProject.id },
+        });
+      }
+    }
+    return await prisma.dev.delete({
+      where: { id: id },
+    });
+  }
+
+  async deleteProject(id: string): Promise<Project | null> {
+    await prisma.devProject.deleteMany({
+      where: { projectId: id },
+    });
+
+    return await prisma.project.delete({
+      where: { id: id },
+    });
   }
 }
 
