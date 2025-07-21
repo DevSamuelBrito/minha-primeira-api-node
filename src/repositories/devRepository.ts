@@ -105,14 +105,14 @@ class DatabaseDevelopment {
   }
 
   //PUT
-  async updateDev(data: Partial<UpdateDevInput> & { id: string }) {
+  async updateDev(data: Partial<UpdateDevInput>, id: string) {
     const existingLinks = await prisma.devProject.findMany({
-      where: { devId: data.id },
+      where: { devId: id },
       select: { projectId: true },
     });
 
     const existingProjectIds = new Set(
-      existingLinks.map((link) => link.projectId)
+      existingLinks.map((link: any) => link.projectId)
     );
 
     const newProjectsToLink = data.devProjects?.filter(
@@ -120,7 +120,7 @@ class DatabaseDevelopment {
     );
 
     return await prisma.dev.update({
-      where: { id: data.id },
+      where: { id: id },
       data: {
         name: data.name,
         email: data.email,
@@ -145,20 +145,22 @@ class DatabaseDevelopment {
     });
   }
 
-  async updateProject(data: Partial<UpdateProjectInput> & { id: string }) {
+  async updateProject(data: Partial<UpdateProjectInput>, id: string) {
     const existingLinks = await prisma.devProject.findMany({
-      where: { projectId: data.id },
+      where: { projectId: id },
       select: { devId: true },
     });
 
-    const existingDevIds = new Set(existingLinks.map((link) => link.devId));
+    const existingDevIds = new Set(
+      existingLinks.map((link: any) => link.devId)
+    );
 
     const newDevsToLink = data.devProjects?.filter(
       (dev) => !existingDevIds.has(dev.devId)
     );
 
     return await prisma.project.update({
-      where: { id: data.id },
+      where: { id: id },
       data: {
         name: data.name,
         description: data.description,
