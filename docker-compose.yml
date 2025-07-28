@@ -1,22 +1,50 @@
+# docker-compose.yml
 version: '3.8'
 
 services:
   mongo:
-    image: mongo
+    image: mongo:7.0
     container_name: mongo-dev
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin
-    volumes:
-      - mongo-data:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mongo-setup:
+    image: mongo:7.0
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: >
+      mongosh --host mongo:27017 --eval "
+        try {
+          rs.status();
+        } catch(e) {
+          var config = {
+            '_id': 'rs0',
+            'version': 1,
+            'members': [
+              {
+                '_id': 0,
+                'host': 'mongo:27017'
+              }
+            ]
+          };
+          rs.initiate(config);
+        }
+      "
+    restart: "no"
 
   api:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: minha-api-dev-com0-mongo
+    container_name: minha-api-dev-com-mongo
     ports:
       - "3000:3000"
     volumes:
@@ -24,6 +52,7 @@ services:
       - /app/node_modules
     env_file:
       - .env
-
-volumes:
-  mongo-data: 
+    depends_on:
+      mongo-setup:
+        condition: service_completed_successfully
+    command: sh -c "sleep 10 && npx prisma db push && npx ts-node-dev --respawn --transpile-only src/index.ts"

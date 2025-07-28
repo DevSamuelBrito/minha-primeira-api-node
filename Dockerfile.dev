@@ -1,21 +1,19 @@
-# Dockerfile.dev
 FROM node:18
 
-# Diretório de trabalho
 WORKDIR /app
 
-# Instala dependências
+# Copia e instala dependências
 COPY package*.json ./
 RUN npm install
 
 # Copia o restante dos arquivos
 COPY . .
 
-# Instala o ts-node-dev para reiniciar a cada alteração
-RUN npm install -D ts-node-dev
+# Apenas gera o cliente (sem conectar ao banco)
+RUN npx prisma generate
 
-# Expõe a porta da aplicação
+# Expõe a porta
 EXPOSE 3000
 
-# Comando de desenvolvimento
+# O comando será executado pelo docker-compose
 CMD ["npx", "ts-node-dev", "--respawn", "--transpile-only", "src/index.ts"]
