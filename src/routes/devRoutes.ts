@@ -5,13 +5,27 @@ import {
   createDev,
   updateDev,
   deleteDev,
+  getAllProject,
+  getProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
 } from "../controllers/devControllers";
 
 const router = express.Router();
 
-router.get("/", getAllDevs);
-router.get("/:id", getDevById);
-router.post("/", createDev);
-router.put("/:id", updateDev);
-router.delete("/:id", deleteDev);
+// === rotas de Devs ===
+router.get("/devs", getAllDevs);
+router.get("/devs/:id", getDevById);
+router.post("/devs", createDev);
+router.put("/devs/:id", updateDev);
+router.delete("/devs/:id", deleteDev);
+
+// === rotas de Projects ===
+router.get("/projects", getAllProject);
+router.get("/projects/:id", getProjectById);
+router.get("/projects", createProject);
+router.get("/projects/:id", updateProject);
+router.get("/projects/:id", deleteProject);
+
 export default router;
