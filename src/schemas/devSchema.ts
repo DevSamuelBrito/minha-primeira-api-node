@@ -31,7 +31,7 @@ export const updateDevSchema = z.object({
       })
     )
     .optional(),
-});
+}).strict();
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, "Nome do Projeto é obrigatório"),
@@ -57,4 +57,4 @@ export const updateProjectSchema = z.object({
       })
     )
     .optional(),
-});
+}).strict();
