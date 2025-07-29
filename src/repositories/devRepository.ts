@@ -52,6 +52,12 @@ class DatabaseDevelopment {
     });
   }
 
+  async findByEmail(email: string): Promise<Dev | null> {
+    return await prisma.dev.findUnique({
+      where: { email: email},
+    })
+  }
+
   //POST
   async createDev(data: CreateDevInput): Promise<CreateDevInput> {
     return await prisma.dev.create({

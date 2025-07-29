@@ -51,7 +51,11 @@ class DevService {
   async createDev(data: CreateDevInput) {
     if (!data.name) throw new ValidationError("Nome é obrigatório");
     if (!data.techs) throw new ValidationError("Linguagem é obrigatória");
-
+    if (!data.email) throw new ValidationError("Email é obrigatório");
+    const existingDev = await devRepository.findByEmail(data.email);
+    if (existingDev) {
+      throw new ValidationError("Email já cadastrado");
+    }
     const newDev = await devRepository.createDev(data);
     if (!newDev) throw new ServerError("Erro ao criar desenvolvedor");
     return newDev;
@@ -67,7 +71,6 @@ class DevService {
       !data.devProjects[0].devId
     )
       throw new Error("ID do desenvolvedor é obrigatório");
-
     const newProject = await devRepository.createProject(data);
     if (!newProject) throw new ServerError("Erro ao criar projeto");
     return newProject;
@@ -76,7 +79,8 @@ class DevService {
   //PUT
   async updateDev(id: string, data: Partial<CreateDevInput>) {
     if (!id) throw new ValidationError("ID do desenvolvedor é obrigatório");
-    if (!data) throw new ValidationError("Dados para atualizar são obrigatórios");
+    if (!data)
+      throw new ValidationError("Dados para atualizar são obrigatórios");
 
     const existingDev = await devRepository.getDevById(id);
     if (!existingDev)
@@ -89,7 +93,8 @@ class DevService {
 
   async updateProject(id: string, data: Partial<UpdateProjectInput>) {
     if (!id) throw new ValidationError("ID do projeto é obrigatório");
-    if (!data) throw new ValidationError("Dados para atualizar são obrigatórios");
+    if (!data)
+      throw new ValidationError("Dados para atualizar são obrigatórios");
 
     const existingProject = await devRepository.getProjectById(id);
     if (!existingProject) {
